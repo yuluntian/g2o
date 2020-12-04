@@ -25,9 +25,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace internal {
-  inline int computeUpperTriangleIndex(int i, int j)
+  inline std::size_t computeUpperTriangleIndex(std::size_t i, std::size_t j)
   {
-    int elemsUpToCol = ((j-1) * j) / 2;
+    std::size_t elemsUpToCol = ((j-1) * j) / 2;
     return elemsUpToCol + i;
   }
 }
@@ -400,14 +400,14 @@ void BaseMultiEdge<-1, E>::computeQuadraticForm(const InformationType& omega, co
       }
 
       // compute the off-diagonal blocks ij for all j
-      for (size_t j = i+1; j < _vertices.size(); ++j) {
+      for (std::size_t j = i+1; j < _vertices.size(); ++j) {
         OptimizableGraph::Vertex* to = static_cast<OptimizableGraph::Vertex*>(_vertices[j]);
         bool jstatus = !(to->fixed());
         if (jstatus) {
           internal::QuadraticFormLock lck(*to);
           const JacobianType& B = _jacobianOplus[j];
-          int idx = internal::computeUpperTriangleIndex(i, j);
-          assert(idx < (int)_hessian.size());
+	  std::size_t idx = internal::computeUpperTriangleIndex(i, j);
+          assert(idx < _hessian.size());
           HessianHelper& hhelper = _hessian[idx];
           if (hhelper.transposed) { // we have to write to the block as transposed
             hhelper.matrix.noalias() += B.transpose() * AtO.transpose();

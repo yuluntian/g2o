@@ -81,7 +81,7 @@ namespace g2o {
       }
 
     // set up rotation matrix for pos0
-    void makeRot0() 
+    void makeRot0()
     {
       Vector3 y;
       y << 0, 1, 0;
@@ -117,7 +117,7 @@ namespace g2o {
               0, 0, 1;
       return R0.transpose()*prec*R0;
     }
-    
+
     // returns a precision matrix for point-plane
     Matrix3 prec1(number_t e)
     {
@@ -128,7 +128,7 @@ namespace g2o {
               0, 0, 1;
       return R1.transpose()*prec*R1;
     }
-    
+
     // return a covariance matrix for plane-plane
     Matrix3 cov0(number_t e)
     {
@@ -139,7 +139,7 @@ namespace g2o {
               0, 0, e;
       return R0.transpose()*cov*R0;
     }
-    
+
     // return a covariance matrix for plane-plane
     Matrix3 cov1(number_t e)
     {
@@ -177,8 +177,8 @@ namespace g2o {
     void computeError()
     {
       // from <ViewPoint> to <Point>
-      const VertexSE3 *vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-      const VertexSE3 *vp1 = static_cast<const VertexSE3*>(_vertices[1]);
+      const VertexSE3 *vp0 = vertexXnRaw<0>();
+      const VertexSE3 *vp1 = vertexXnRaw<1>();
 
       // get vp1 point into vp0 frame
       // could be more efficient if we computed this transform just once
@@ -381,8 +381,8 @@ namespace g2o {
     void computeError()
     {
       // from <Point> to <Cam>
-      const VertexPointXYZ *point = static_cast<const VertexPointXYZ*>(_vertices[0]);
-      VertexSCam *cam = static_cast<VertexSCam*>(_vertices[1]);
+      VertexPointXYZ *point = vertexXnRaw<0>();
+      VertexSCam *cam = vertexXnRaw<1>();
       //cam->setAll();
 
       // calculate the projection

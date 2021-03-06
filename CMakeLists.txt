@@ -106,15 +106,32 @@ endif()
 
 # For building the CHOLMOD based solvers
 option(G2O_USE_CHOLMOD "Build g2o with CHOLMOD support" ON)
-find_package(Cholmod)
-find_package(BLAS)
-find_package(LAPACK)
-if (G2O_USE_CHOLMOD AND CHOLMOD_FOUND AND BLAS_FOUND AND LAPACK_FOUND)
+
+# Check for the "suitesparse-metis-for-windows" cmake file
+# which is installed for vcpkg (but will work on other OS
+# combinations as well). If that fails, fall back to the
+# local cholmod cmake script.
+if (G2O_USE_CHOLMOD)
+   find_package(suitesparse QUIET)
+   if (TARGET SuiteSparse::cholmod)
+      set(CHOLMOD_FOUND TRUE)
+   else()
+      find_package(BLAS)
+      find_package(LAPACK)
+      find_package(Cholmod)
+      if (CHOLMOD_FOUND AND BLAS_FOUND AND LAPACK_FOUND)
+        set(G2O_CHOLMOD_TARGET ${CHOLMOD_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+        set(CHOLMOD_FOUND TRUE)
+      else()
+        set(CHOLMOD_FOUND FALSE)
+      endif()
+   endif()
+endif ()
+
+if (CHOLMOD_FOUND)
   message(STATUS "Enable support for Cholmod")
-  set(CHOLMOD_FOUND TRUE)
 else()
   message(STATUS "Disable support for Cholmod")
-  set(CHOLMOD_FOUND FALSE)
 endif()
 
 # For building the CSparse based solvers

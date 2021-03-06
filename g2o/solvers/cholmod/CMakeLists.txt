@@ -17,8 +17,12 @@ if (APPLE)
   set_target_properties(solver_cholmod PROPERTIES INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 endif()
 
-add_definitions(${BLAS_DEFINITIONS} ${LAPACK_DEFINITIONS})
-target_link_libraries(solver_cholmod ${CHOLMOD_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} core)
+if (TARGET SuiteSparse::cholmod)
+  target_link_libraries(solver_cholmod SuiteSparse::cholmod core)
+else()
+  add_definitions(${BLAS_DEFINITIONS} ${LAPACK_DEFINITIONS})
+  target_link_libraries(solver_cholmod ${CHOLMOD_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} core)
+endif()
 
 install(TARGETS solver_cholmod
   EXPORT ${G2O_TARGETS_EXPORT_NAME}

@@ -97,4 +97,8 @@ namespace g2o {
     _writeDebug->setValue(writeDebug);
   }
 
+  void OptimizationAlgorithmWithHessian::saveHessian(const std::string &filename) const {
+    _solver.saveHessian(filename);
+  }
+
 } // end namespace

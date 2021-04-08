@@ -56,6 +56,8 @@ namespace g2o {
       //! return the underlying solver used to solve the linear system
       Solver& solver() { return _solver;}
 
+      void saveHessian(const std::string& filename) const;
+
       /**
        * write debug output of the Hessian if system is not positive definite
        */

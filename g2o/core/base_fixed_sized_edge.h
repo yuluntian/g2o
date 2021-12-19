@@ -27,11 +27,17 @@
 #ifndef G2O_BASE_FIXED_SIZED_EDGE_H
 #define G2O_BASE_FIXED_SIZED_EDGE_H
 
+#include <array>
 #include <iostream>
 #include <limits>
 #include <utility>
 
-#include "g2o/EXTERNAL/ceres/fixed_array.h"
+#ifdef G2O_USE_VENDORED_CERES
+  #include "g2o/EXTERNAL/ceres/fixed_array.h"
+#else
+  #include <ceres/internal/fixed_array.h>
+#endif
+
 #include "base_edge.h"
 #include "g2o/config.h"
 #include "g2o/stuff/misc.h"
@@ -41,6 +47,18 @@
 namespace g2o {
 
 namespace internal {
+
+// creating a bool array
+template <int K>
+std::array<bool, K> createBoolArray() {
+  std::array<bool, K> aux = {false};
+  return aux;
+}
+template <>
+inline std::array<bool, 0> createBoolArray<0>() {
+  return std::array<bool, 0>();
+}
+
 // assumes i < j
 // duplication of internal::computeUpperTriangleIndex in g2o/core/base_variable_sized_edge.hpp
 constexpr int pair_to_index(const int i, const int j) { return j * (j - 1) / 2 + i; }
@@ -181,10 +199,11 @@ class BaseFixedSizedEdge : public BaseEdge<D, E> {
       typename HessianTupleType<std::make_index_sequence<_nr_of_vertex_pairs>>::type;
   using HessianTupleTransposed =
       typename HessianTupleType<std::make_index_sequence<_nr_of_vertex_pairs>>::typeTransposed;
+  using HessianRowMajorStorage = std::array<bool, _nr_of_vertex_pairs>;
 
   BaseFixedSizedEdge()
       : BaseEdge<D, E>(),
-        _hessianRowMajor(false),
+         _hessianRowMajor(internal::createBoolArray<_nr_of_vertex_pairs>()),
         _hessianTuple(internal::createHessianMaps(_hessianTuple)),
         _hessianTupleTransposed(internal::createHessianMaps(_hessianTupleTransposed)),
         _jacobianOplus({nullptr, D, VertexTypes::Dimension}...) {
@@ -261,7 +280,7 @@ class BaseFixedSizedEdge : public BaseEdge<D, E> {
   using BaseEdge<D, E>::_vertices;
   using BaseEdge<D, E>::_dimension;
 
-  bool _hessianRowMajor;
+  HessianRowMajorStorage _hessianRowMajor;
   HessianTuple _hessianTuple;
   HessianTupleTransposed _hessianTupleTransposed;
   std::tuple<JacobianType<D, VertexTypes::Dimension>...> _jacobianOplus;

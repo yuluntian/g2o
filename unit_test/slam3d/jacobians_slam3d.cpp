@@ -33,12 +33,17 @@
 #include "g2o/types/slam3d/edge_se3.h"
 #include "g2o/types/slam3d/edge_pointxyz.h"
 #include "g2o/types/slam3d/edge_se3_pointxyz.h"
+#include "g2o/types/slam3d/edge_se3_xyzprior.h"
 #include "g2o/types/slam3d/dquat2mat.h"
 
 
 #include "g2o/core/optimizable_graph.h"
 
-#include "g2o/EXTERNAL/ceres/autodiff.h"
+#ifdef G2O_USE_VENDORED_CERES
+  #include "g2o/EXTERNAL/ceres/autodiff.h"
+#else
+  #include <ceres/internal/autodiff.h>
+#endif
 
 using namespace std;
 using namespace g2o;
@@ -68,6 +73,34 @@ TEST(Slam3D, EdgeSE3Jacobian)
     e.setMeasurement(internal::randomIsometry3());
 
     evaluateJacobian(e, jacobianWorkspace, numericJacobianWorkspace);
+  }
+}
+
+TEST(Slam3D, EdgeSE3XYZPriorJacobian)
+{
+  VertexSE3 v1;
+  v1.setId(0);
+
+  EdgeSE3XYZPrior e;
+  e.setVertex(0, &v1);
+  e.setInformation(EdgeSE3XYZPrior::InformationType::Identity());
+
+  JacobianWorkspace jacobianWorkspace;
+  JacobianWorkspace numericJacobianWorkspace;
+  numericJacobianWorkspace.updateSize(&e);
+  numericJacobianWorkspace.allocate();
+
+  // test in identity pose
+  v1.setEstimate(Eigen::Isometry3d::Identity());
+  e.setMeasurement(Eigen::Vector3d::Random());
+  evaluateJacobianUnary(e, jacobianWorkspace, numericJacobianWorkspace);
+
+  // test in random pose
+  for (int k = 0; k < 10000; ++k) {
+    v1.setEstimate(internal::randomIsometry3());
+    e.setMeasurement(Eigen::Vector3d::Random());
+
+    evaluateJacobianUnary(e, jacobianWorkspace, numericJacobianWorkspace);
   }
 }
 

@@ -26,6 +26,7 @@ endif()
 if (G2O_BUILD_SLAM3D_ADDON_TYPES)
   add_subdirectory(line_slam)
   add_subdirectory(plane_slam)
+  add_subdirectory(mpcr)
 endif()
 
 if (G2O_BUILD_SIM3_TYPES)

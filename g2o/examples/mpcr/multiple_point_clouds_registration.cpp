@@ -136,6 +136,18 @@ int main(int argc, const char *argv[]) {
   average_error = average_error / (double) optimizer.edges().size();
   std::cout << "Average error after optimization: " << average_error << " m." << std::endl;
 
+  // Extract covariances over the point variables
+  g2o::SparseBlockMatrix<Eigen::MatrixXd> C;
+  std::vector<std::pair<int, int>> index_pairs;
+  for (const auto it : points) {
+    auto vertex_point = it.second;
+    index_pairs.emplace_back(vertex_point->hessianIndex(), vertex_point->hessianIndex());
+  }
+  if (!optimizer.computeMarginals(C, index_pairs)) {
+    std::cout << "Fail to compute marginals!" << std::endl;
+    return -1;
+  }
+
   // Save to file
   std::ofstream points_output_file(argv[4]);
   if (!points_output_file.is_open()) {
@@ -143,15 +155,27 @@ int main(int argc, const char *argv[]) {
     return -1;
   }
   points_output_file << std::fixed << std::setprecision(15);
-  points_output_file << "point_id x y z\n";
+  points_output_file << "point_id x y z sigma_x sigma_y sigma_z\n";
   for (const auto it : points) {
-    int point_id = it.first;
+    int point_id_output = it.first;
     auto vertex = it.second;
     auto position = vertex->estimate();
-    points_output_file << point_id << " ";
-    points_output_file << position(0) << " ";
-    points_output_file << position(1) << " ";
-    points_output_file << position(2) << "\n";
+    double x = position(0);
+    double y = position(1);
+    double z = position(2);
+    Eigen::Matrix3d Cp = *C.block(vertex->hessianIndex(), vertex->hessianIndex());
+    double sigma_x = std::sqrt(Cp(0, 0));
+    double sigma_y = std::sqrt(Cp(1, 1));
+    double sigma_z = std::sqrt(Cp(2, 2));
+    printf("Point %i: (%.2f, %.2f, %.2f), sigma (%.1e, %.1e, %.1e)\n",
+           point_id_output, x, y, z, sigma_x, sigma_y, sigma_z);
+    points_output_file << point_id_output << " ";
+    points_output_file << x << " ";
+    points_output_file << y << " ";
+    points_output_file << z << " ";
+    points_output_file << sigma_x << " ";
+    points_output_file << sigma_y << " ";
+    points_output_file << sigma_z << "\n";
   }
   points_output_file.close();
   std::cout << "Saved estimated points to " << argv[4] << std::endl;
